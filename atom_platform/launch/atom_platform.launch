@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<launch>
+    <!-- Platform specific parameters -->
+    <arg name="robot_name" default="atom"/>
+    <arg name="robot_xacro" default="$(find atom_description)/urdf/atom.xacro"/>
+    <arg name="robot_parameters" default="$(find atom_control)/config/atom_controllers.yaml"/>
+
+    <group ns="$(arg robot_name)">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(arg robot_xacro)'" />
+        <rosparam file="$(arg robot_parameters)" command="load"/>
+
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" args="joint_state_controller diff_drive_controller"/>
+
+        <node name="atom_controller" pkg="atom_control" type="atom_control_node"/>
+        
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+        <node name="atom_hardware_interface" pkg="atom_hardware_interface" type="atom_hardware_interface_node"/>
+
+        <!--<node name="joy" pkg="joy" type="joy_node" respawn="true">
+            <param name="dev" type="string" value="/dev/input/js0"/>
+            <rosparam>
+                autorepeat_rate: 4
+            </rosparam>
+        </node>-->
+
+        <node name="teleop_twist_joy" pkg="teleop_twist_joy" type="teleop_node" respawn="true">
+            <rosparam>
+                axis_linear: 5
+                scale_linear: 1.0
+                scale_linear_turbo: 1.5
+                axis_angular: 4
+                scale_angular: 1.0
+            </rosparam>
+            <remap from="cmd_vel" to="diff_drive_controller/cmd_vel"/>
+        </node>
+
+        <!-- Raspberry Pi Camera input -->
+        <node name="cv_camera" pkg="cv_camera" type="cv_camera_node"/>
+        <!--<node name="usb_cam" pkg="usb_cam" type="usb_cam_node">
+            <param name="pixel_format" value="yuyv" />
+        </node>-->
+    </group>
+</launch>

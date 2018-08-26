@@ -1,0 +1,43 @@
+# Publish all joint states from a joint state controller
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 10 # hz
+
+# Control the wheels from a differential drive controller
+diff_drive_controller:
+  type: diff_drive_controller/DiffDriveController
+  left_wheel: ['joint_front_left', 'joint_back_left']
+  right_wheel: ['joint_front_right', 'joint_back_right']
+  publish_rate: 10 # hz
+  enable_odom_tf: false # encoder based, extremely unreliable
+#  enable_odom_tf: true # sometimes it is the only thing you can have
+  pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.03]
+  twist_covariance_diagonal: [0.001, 0.001, 0.001, 1000000.0, 1000000.0, 0.03]
+  cmd_vel_timeout: 0.5 # seconds
+  linear:
+    x:
+      has_velocity_limits    : true
+      max_velocity           : 0.2  # m/s
+      min_velocity           : -0.2 # m/s
+      has_acceleration_limits: false
+      max_acceleration       : 1.0  # m/s^2
+      min_acceleration       : -1.0 # m/s^2
+      has_jerk_limits        : false
+      max_jerk               : 2.0  # m/s^3
+  angular:
+    z:
+      has_velocity_limits    : true
+      max_velocity           : 1.0  # rad/s
+      has_acceleration_limits: false
+      max_acceleration       : 2.0  # rad/s^2
+      has_jerk_limits        : false
+      max_jerk               : 4.0  # rad/s^3
+
+# ATOM hardware interface definition
+hardware_interface:
+  loop_hz: 10 # hz
+  joints:
+    - joint_front_left
+    - joint_front_right
+    - joint_back_left
+    - joint_back_right

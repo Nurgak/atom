@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>atom_platform</name>
+  <version>0.0.0</version>
+  <description>The atom_platform package</description>
+  <maintainer email="karl.kangur@gmail.com">Karl Kangur</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <export>
+  </export>
+</package>

@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<launch>
+    <node name="joy" pkg="joy" type="joy_node" ns="atom" respawn="true">
+        <param name="dev" type="string" value="/dev/input/js0"/>
+        <rosparam>
+            autorepeat_rate: 4
+        </rosparam>
+    </node>
+</launch>

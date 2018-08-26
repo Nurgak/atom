@@ -5,7 +5,6 @@
   <description>The atom_platform package</description>
   <maintainer email="karl.kangur@gmail.com">Karl Kangur</maintainer>
   <license>MIT</license>
-  <buildtool_depend>catkin</buildtool_depend>
   <export>
   </export>
 </package>

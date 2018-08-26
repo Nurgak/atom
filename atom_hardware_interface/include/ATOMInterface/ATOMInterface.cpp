@@ -6,8 +6,24 @@ namespace ATOM_interface
 ATOMInterface::ATOMInterface(ros::NodeHandle& nh) : nh_(nh)
 {
     // Get joint names
-    nh_.getParam("hardware_interface/joints", joint_names_);
+    std::vector<std::string> joint_names_left_;
+    std::vector<std::string> joint_names_right_;
+
+    nh_.getParam("diff_drive_controller/left_wheel", joint_names_left_);
+    joint_names_.insert(joint_names_.end(), joint_names_left_.begin(),
+        joint_names_left_.end());
+
+    nh_.getParam("diff_drive_controller/right_wheel", joint_names_right_);
+    joint_names_.insert(joint_names_.end(), joint_names_right_.begin(),
+        joint_names_right_.end());
+
     num_joints_ = joint_names_.size();
+
+    if(num_joints_ == 0)
+    {
+        ROS_FATAL("Did not find joints");
+        exit(1);
+    }
 
     // Resize vectors
     joint_position_.resize(num_joints_);

@@ -16,8 +16,12 @@ class ATOMInterface: public hardware_interface::RobotHW
     public:
         ATOMInterface(ros::NodeHandle& nh);
         virtual ~ATOMInterface() {}
+
+        // Pure virtual methods, need use specific definition
         virtual void read() = 0;
         virtual void write() = 0;
+
+        // Update calls read, write and controller manager
         virtual void update();
 
     protected:

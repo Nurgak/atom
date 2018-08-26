@@ -102,6 +102,11 @@ void ATOMHardwareInterface::write()
             gpio_a = gpio_right_a;
             gpio_b = gpio_right_b;
         }
+        else
+        {
+            ROS_FATAL("Could not define joint side");
+            exit(1);
+        }
 
         // Set PWM based on joint_velocity_command_
         if(joint_velocity_command_[i] > 0)
@@ -142,7 +147,7 @@ int main(int argc, char** argv)
 
     // Call the control loop
     double loop_hz;
-    nh.param("hardware_interface/loop_hz", loop_hz, 0.1);
+    nh.param("diff_drive_controller/publish_rate", loop_hz, 0.1);
     ros::Rate rate(loop_hz);
     while(ros::ok())
     {

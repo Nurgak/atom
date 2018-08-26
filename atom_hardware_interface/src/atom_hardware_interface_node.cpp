@@ -24,9 +24,10 @@ class ATOMHardwareInterface: public ATOMInterface
         int gpio_left_b;
         int gpio_right_a;
         int gpio_right_b;
-};
+}; // class
 
-ATOMHardwareInterface::ATOMHardwareInterface(ros::NodeHandle& nh) : ATOMInterface(nh)
+ATOMHardwareInterface::ATOMHardwareInterface(ros::NodeHandle& nh) :
+    ATOMInterface(nh)
 {
     gpio_left_a = 5;
     gpio_left_b = 6;
@@ -41,6 +42,9 @@ ATOMHardwareInterface::ATOMHardwareInterface(ros::NodeHandle& nh) : ATOMInterfac
     pinMode(gpio_right_b, OUTPUT);
 
     // Hardware PWM only works on pin 18 (LED)
+    // Set PWM range from 0 to 100 (percent)
+    // Minimum pulse width is 100us
+    // 100us * 100 = 10ms = 100Hz
     softPwmCreate(gpio_left_a, 0, 100);
     softPwmCreate(gpio_left_b, 0, 100);
     softPwmCreate(gpio_right_a, 0, 100);
@@ -49,7 +53,7 @@ ATOMHardwareInterface::ATOMHardwareInterface(ros::NodeHandle& nh) : ATOMInterfac
 
 ATOMHardwareInterface::~ATOMHardwareInterface()
 {
-    // Cleanup GPIO
+    // Cleanup GPIO (also stops the motors)
     softPwmWrite(gpio_left_a, 0);
     softPwmWrite(gpio_left_b, 0);
     softPwmWrite(gpio_right_a, 0);
@@ -64,11 +68,11 @@ ATOMHardwareInterface::~ATOMHardwareInterface()
 
 void ATOMHardwareInterface::read()
 {
-    // Read sensors (encoders, odometry...), can be impletented as a model
-    for (int i = 0; i < num_joints_; i++)
+    // Read sensors (encoders, odometry...)
+    /*for (int i = 0; i < num_joints_; i++)
     {
-        //joint_velocity_[i] = ATOM.getJoint(joint_names_[i]).read();
-    }
+        // Nothing to read from joints
+    }*/
 }
 
 void ATOMHardwareInterface::write()
@@ -76,47 +80,48 @@ void ATOMHardwareInterface::write()
     int gpio_a;
     int gpio_b;
 
-    // Write command to the wheels
+    // Write command to the drive motor joints
     for(int i = 0; i < num_joints_; i++)
     {
-        if(joint_names_[i] == "joint_front_left")
+        // As there are no sensors on the robot the "joint_velocity_" vector
+        // shall be updated here instead of in read()
+        joint_velocity_[i] = joint_velocity_command_[i];
+
+        // Dummy way to set wheel angle for proper rviz display
+        joint_position_[i] = joint_position_[i] + joint_velocity_command_[i];
+
+        if(joint_names_[i].find("left") > 0)
         {
-                gpio_a = gpio_left_b;
-                gpio_b = gpio_left_a;
+            // Left wheels
+            gpio_a = gpio_left_b;
+            gpio_b = gpio_left_a;
         }
-        else if(joint_names_[i] == "joint_front_right")
+        else if(joint_names_[i].find("right") > 0)
         {
-                gpio_a = gpio_right_a;
-                gpio_b = gpio_right_b;
-        }
-        else
-        {
-            // No need to actuate the back wheels as they are the same as front
-            continue;
+            // Right wheels
+            gpio_a = gpio_right_a;
+            gpio_b = gpio_right_b;
         }
 
         // Set PWM based on joint_velocity_command_
         if(joint_velocity_command_[i] > 0)
         {
+            // Forwards
             softPwmWrite(gpio_a, 30);
             softPwmWrite(gpio_b, 0);
         }
         else if(joint_velocity_command_[i] < 0)
         {
+            // Backwards
             softPwmWrite(gpio_a, 0);
             softPwmWrite(gpio_b, 30);
         }
         else
         {
+            // Stop
             softPwmWrite(gpio_a, 0);
             softPwmWrite(gpio_b, 0);
         }
-
-        // As there are no sensors on the robot the joint_velocity_ shall be updated here instead of in read()
-        joint_velocity_[i] = joint_velocity_command_[i];
-
-        // Dummy way to read position for proper rviz vision
-        joint_position_[i] = joint_position_[i] + joint_velocity_command_[i];
     }
 }
 

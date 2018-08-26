@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>atom_description</name>
+  <version>1.0.0</version>
+  <description>The ATOM rover description</description>
+  <license>MIT</license>
+  <maintainer email="karl.kangur@gmail.com">Karl Kangur</maintainer>
+  <depend>xacro</depend>
+</package>

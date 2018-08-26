@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<robot name="atom" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Import all Gazebo-customization elements, including Gazebo colors and plugins -->
+  <xacro:include filename="$(find atom_description)/urdf/atom.gazebo" />
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find atom_description)/urdf/materials.xacro" />
+  <!-- Import xacro macros -->
+  <xacro:include filename="$(find atom_description)/urdf/macros.xacro" />
+  
+  <!-- Main body -->
+  <xacro:cube name="base_link" mass="1.0" x="0.15" y="0.1" z="0.05" origin="0 0 0" color="gold" />
+
+  <!-- Define all the wheels -->
+  <xacro:wheel name="front_left" mass="0.1" radius="0.04" height="0.05" origin="0.075 0.075 -0.025" color="grey" />
+  <xacro:wheel name="front_right" mass="0.1" radius="0.04" height="0.05" origin="0.075 -0.075 -0.025" color="grey" />
+  <xacro:wheel name="back_left" mass="0.1" radius="0.04" height="0.05" origin="-0.075 0.075 -0.025" color="grey" />
+  <xacro:wheel name="back_right" mass="0.1" radius="0.04" height="0.05" origin="-0.075 -0.075 -0.025" color="grey" />
+
+  <!-- Camera -->
+  <xacro:cube name="camera" mass="0.1" x="0.02" y="0.01" z="0.01" origin="0 0 0" color="blue" />
+
+  <joint name="joint_camera" type="fixed">
+    <parent link="base_link" />
+    <child link="camera" />
+    <origin xyz="0.03 0 0.125" />
+  </joint>
+
+  <!-- Camera sensor -->
+  <gazebo reference="camera">
+    <sensor type="camera" name="camera">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>${90 * pi / 180}</horizontal_fov>
+        <image>
+          <width>1024</width>
+          <height>1024</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>camera</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>

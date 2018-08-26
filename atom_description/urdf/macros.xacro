@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Inertia macro definitions -->
+  <xacro:macro name="cylinder_inertia" params="mass radius height">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia
+          ixx="${mass / 12.0 * (3 * radius * radius + height * height)}"
+          iyy="${mass / 12.0 * (3 * radius * radius + height * height)}"
+          izz="${mass / 2.0 * radius * radius}"
+          ixy="0"
+          ixz="0"
+          iyz="0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Wheel definition -->
+  <xacro:macro name="wheel" params="name origin mass radius height color">
+    <!-- Joint -->
+    <joint name="joint_${name}" type="continuous">
+      <parent link="base_link" />
+      <child link="wheel_${name}" />
+      <axis xyz="0 1 0" />
+      <origin xyz="${origin}" />
+      <limit effort="100" velocity="100" />
+      <joint_properties damping="0.0" friction="0.0" />
+    </joint>
+
+    <!-- Link -->
+    <link name="wheel_${name}">
+      <collision>
+        <origin rpy="${pi / 2} 0 0" />
+        <geometry>
+          <cylinder length="${height}" radius="${radius}" />
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertia mass="${mass}" height="${height}" radius="${radius}" />
+      <visual>
+        <origin rpy="${pi / 2} 0 0" />
+        <geometry>
+          <cylinder length="${height}" radius="${radius}" />
+        </geometry>
+        <material name="${color}" />
+      </visual>
+    </link>
+
+    <!-- Motor -->
+    <transmission name="transmission_${name}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_${name}">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="motor_${name}">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <xacro:macro name="cube" params="name mass x y z origin color">
+    <link name="${name}">
+      <collision>
+        <origin xyz="${origin}" />
+        <geometry>
+          <box size="${x} ${y} ${z}" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <inertia
+          ixx="${mass / 12.0 * (y * y + z * z)}"
+          iyy="${mass / 12.0 * (x * x + z * z)}"
+          izz="${mass / 12.0 * (x * x + y * y)}"
+          ixy="0"
+          ixz="0"
+          iyz="0"/>
+      </inertial>
+      <visual>
+        <origin xyz="${origin}" />
+        <geometry>
+          <box size="${x} ${y} ${z}" />
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="box_inertia" params="m x y z">
+    <inertia ixx="${m*(y*y+z*z)/12}" ixy = "0" ixz = "0" iyy="${m*(x*x+z*z)/12}" iyz = "0" izz="${m*(x*x+z*z)/12}" />
+  </xacro:macro>
+
+  <xacro:macro name="sphere_inertia" params="m r">
+    <inertia ixx="${2*m*r*r/5}" ixy = "0" ixz = "0" iyy="${2*m*r*r/5}" iyz = "0" izz="${2*m*r*r/5}" />
+  </xacro:macro>
+</robot>

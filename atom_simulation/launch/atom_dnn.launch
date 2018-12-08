@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<launch>
+    <node name="dnn_detect" pkg="dnn_detect" type="dnn_detect" output="screen" respawn="false" ns="atom">
+        <param name="image_transport" value="raw"/>
+        <param name="publish_images" value="true" />
+        <param name="data_dir" value="$(find dnn_detect)/model"/>
+        <remap from="/camera" to="/atom/cv_camera/image_raw"/>
+    </node>
+</launch>

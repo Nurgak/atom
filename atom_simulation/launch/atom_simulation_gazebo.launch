@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<launch>
+    <!-- Platform specific parameters -->
+    <arg name="rover_name" default="atom"/>
+    <arg name="rover_xacro" default="$(find atom_description)/urdf/atom.xacro"/>
+    <arg name="rover_parameters" default="$(find atom_control)/config/atom_controllers.yaml"/>
+    <arg name="map" default="$(find atom_simulation)/map/maze.yaml"/>
+    <!--<arg name="world" default="$(find atom_simulation)/worlds/atom.world"/>-->
+    <arg name="world" default="$(find rover_world)/worlds/blank.world"/>
+    
+    <!-- Gazebo simulation parameters -->
+    <arg name="sim_paused" default="false"/>
+    <arg name="sim_use_sim_time" default="true"/>
+    <arg name="sim_gui" default="false"/>
+    <arg name="sim_headless" default="true"/>
+    <arg name="sim_debug" default="false"/>
+    
+    <!-- Launch the Gazebo simulation environment -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world)"/>
+        <arg name="debug" value="$(arg sim_debug)" />
+        <arg name="gui" value="$(arg sim_gui)" />
+        <arg name="paused" value="$(arg sim_paused)"/>
+        <arg name="use_sim_time" value="$(arg sim_use_sim_time)"/>
+        <arg name="headless" value="$(arg sim_headless)"/>
+    </include>
+
+    <group ns="$(arg rover_name)">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(arg rover_xacro)'" />
+        <rosparam file="$(arg rover_parameters)" command="load"/>
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="joint_state_controller diff_drive_controller"/>
+
+        <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" args="-param robot_description -urdf
+            -x 0.0
+            -y 0.0
+            -z 0.0
+            -R 0.0
+            -P 0.0
+            -Y 0.0
+            -model $(arg rover_name)"/>
+        
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+        <node name="map_server" pkg="map_server" type="map_server" args="$(arg map)" />
+
+        <!-- Provides a transform from map to odom -->
+        <node pkg="tf" type="static_transform_publisher" name="ground_truth_tf" args="0 0 0 0 0 0 1 map odom 100" />
+
+        <!-- Provides a tf frame from the ground truth odometry topic (provided by gazebo) to odom -->
+        <node pkg="message_to_tf" type="message_to_tf" name="ground_truth_to_tf" output="screen">
+            <param name="frame_id" value="odom" />
+            <param name="odometry_topic" value="ground_truth" />
+        </node>
+
+        <node name="joy" pkg="joy" type="joy_node" respawn="true">
+            <param name="dev" type="string" value="/dev/input/js0" />
+            <rosparam>
+                autorepeat_rate: 4
+            </rosparam>
+        </node>
+
+        <node name="teleop_twist_joy" pkg="teleop_twist_joy" type="teleop_node" respawn="true">
+            <rosparam>
+                axis_linear: 5
+                axis_angular: 4
+                scale_linear: 1.0
+                scale_linear_turbo: 1.5
+                scale_angular: 1.0
+            </rosparam>
+            <remap from="cmd_vel" to="diff_drive_controller/cmd_vel"/>
+        </node>
+
+        <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+            <rosparam file="$(find atom_control)/config/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
+            <rosparam file="$(find atom_control)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+            <rosparam file="$(find atom_control)/config/local_costmap_params.yaml" command="load" />
+            <rosparam file="$(find atom_control)/config/global_costmap_params.yaml" command="load" /> 
+            <rosparam file="$(find atom_control)/config/base_local_planner_params.yaml" command="load" />
+            <remap from="cmd_vel" to="diff_drive_controller/cmd_vel"/>
+            <remap from="move_base_simple/goal" to="/move_base_simple/goal"/>
+        </node>
+
+        <!--<node name="cv_camera" pkg="camera" type="camera_node"/>-->
+    </group>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find atom_simulation)/config/view.rviz" />
+</launch>

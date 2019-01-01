@@ -83,6 +83,7 @@ void ATOMVREPInterface::read()
     float position;
     for (int i = 0; i < num_joints_; i++)
     {
+        // Simulation provides joint position, read it as an encoder
         simxGetJointPosition(clientID, joint_handle_[i], &position, simx_opmode_buffer);
         joint_position_[i] = position;
     }
@@ -116,10 +117,9 @@ int main(int argc, char** argv)
     // ATOM instance
     ATOM_interface::ATOMVREPInterface ATOM_VREP_simulation(nh);
 
-    // Call the control loop at 10Hz by default
+    // Call the control loop, default rate: 10Hz
     double loop_hz;
-    nh.param("hardware_interface/loop_hz", loop_hz, 10.0);
-    ROS_INFO("Update rate: %f", loop_hz);
+    nh.param("diff_drive_controller/publish_rate", loop_hz, 10.0);
     ros::Rate rate(loop_hz);
     while(ros::ok())
     {

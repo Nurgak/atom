@@ -145,9 +145,9 @@ int main(int argc, char** argv)
     // ATOM instance
     ATOM_interface::ATOMHardwareInterface ATOM_hardware_interface(nh);
 
-    // Call the control loop
+    // Call the control loop, default rate: 10Hz
     double loop_hz;
-    nh.param("diff_drive_controller/publish_rate", loop_hz, 0.1);
+    nh.param("diff_drive_controller/publish_rate", loop_hz, 10);
     ros::Rate rate(loop_hz);
     while(ros::ok())
     {

@@ -2,8 +2,9 @@
 
 ## Overview
 
-Repository for the ATOM platform running on a Raspberry Pi and its simulation stack in V-REP, based on [ROS framework](http://www.ros.org/).
+Repository for the ATOM platform running on a Raspberry Pi and its simulation stack in [V-REP](http://www.coppeliarobotics.com), based on [ROS framework](http://www.ros.org/).
 
+![Image](atom.png)
 
 **Keywords:** raspberry pi, robot, hardware, simulation, mobile platform
 
@@ -15,11 +16,7 @@ The source code is released under [MIT license](LICENSE).
 Maintainer: Karl Kangur, karl.kangur@gmail.com  
 Affiliation: Personal**
 
-The `atom` package has been tested under [ROS](http://wiki.ros.org) Indigo and Ubuntu Mate 16.04 on a Raspberry Pi 3.
-
-
-![Example image](doc/example.jpg)
-
+The `atom` package has been tested under [ROS](http://wiki.ros.org) Indigo and [Ubuntu Mate](https://ubuntu-mate.org/raspberry-pi/) 16.04 on a Raspberry Pi.
 
 ## Installation
 
@@ -49,16 +46,19 @@ To build from source, clone the latest version from this repository into your ca
 
 ### Unit Tests
 
-Run the unit tests with
-
-	catkin build run_tests_atom
-
+No unit tests so far.
 
 ## Usage
 
-Run the main node with
+Run the main node on the Raspberry Pi with
 
 	roslaunch atom_platform atom_platform.launch
+
+Run the V-REP simulation with
+
+	roslaunch atom_simulation atom_simulation_vrep.launch
+
+Note that V-REP must be launched first, the world loaded and the simulation running.
 
 ## Config files
 
@@ -72,17 +72,9 @@ atom_control/config
 
 ## Launch files
 
-* **atom_platform.launch:** shortly explain what is launched (e.g standard simulation, simulation with gdb,...)
-
-     Argument set 1
-
-     - **`argument_1`** Short description (e.g. as commented in launch file). Default: `default_value`.
-
-    Argument set 2
-
-    - **`...`**
-
-* **...**
+* **atom_platform.launch:** launch the physical platform, including the hardware interface
+* **atom_simulation_vrep.launch:** launch the V-REP simulation
+* **atom_ground_control.launch:** launch the R-VIZ visualization
 
 ## Nodes
 
@@ -90,16 +82,16 @@ atom_control/config
 
 Hardware interface between the Raspberry Pi and the mobile platform. It creates the controller manager and exposes the velocity joint interfaces for the left and right drive motors. The joint definitions are taken from the `diff_drive_controller`, so they only need be defined once in the controller configuration file.
 
-This node sets the PWM signals of the GPIO to set the motor speeds, according to the joint velocity commands receieved by `diff_drive_controller`.
+This node sets the PWM signals of the GPIO to set the motor speeds through the L298 dual h-bridge module, according to the joint velocity commands received by `diff_drive_controller`.
 
-#### Services
+The pins of the L298 are to be connected the following way:
 
-* **`stop`** ([std_srvs/Trigger])
-
-	Stops all motors
-
-		rosservice call /atom_platform/stop
-
+| L298 | RPi      |
+| ---- | -------- |
+| EN1  | GPIO5    |
+| EN2  | GPIO6    |
+| EN3  | GPIO13   |
+| EN4  | GPIO19   |
 
 #### Parameters
 
@@ -111,7 +103,22 @@ This node sets the PWM signals of the GPIO to set the motor speeds, according to
 
 	Right wheel names.
 
+* **`diff_drive_controller/publish_rate`** (float, default: 10)
 
-### atom_control
+	Control loop rate.
 
-...
+### atom_vrep_interface
+
+Node to interface with the V-REP simulation. The names of the joints in the V-REP simulation must agree with the joint names defined in the `diff_drive_controller` configuration.
+
+* **`diff_drive_controller/left_wheel`** (array, default: [])
+
+	Left wheel names.
+
+* **`diff_drive_controller/right_wheel`** (array, default: [])
+
+	Right wheel names.
+
+* **`diff_drive_controller/publish_rate`** (float, default: 10)
+
+  Control loop rate.

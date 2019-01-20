@@ -1,0 +1,84 @@
+<?xml version="1.0" ?>
+<launch>
+    <!-- Platform specific parameters -->
+    <arg name="robot_name" default="atom" doc="Robot name"/>
+    <arg name="robot_xacro" default="$(find atom_description)/urdf/atom.xacro" doc="ATOM xacro file location"/>
+    <arg name="robot_parameters" default="$(find atom_control)/config/atom_controllers.yaml" doc="ATOM controller file"/>
+    <arg name="map" default="duckietown" doc="Map name"/>
+    <arg name="map_file" default="$(find atom_interface_vrep)/map/$(arg map).yaml" doc="Costmap to be used for move_base navigation"/>
+
+    <!-- Use simulation time -->
+    <param name="use_sim_time" value="true"/>
+
+    <group ns="$(arg robot_name)">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(arg robot_xacro)'"/>
+
+        <!-- Load robot parameters -->
+        <rosparam file="$(arg robot_parameters)" command="load"/>
+
+        <!-- Load the differential drive controller -->
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="joint_state_controller diff_drive_controller"/>
+
+        <!-- Load robot model in gazebo, used by the visualisation -->
+        <!--<node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" args="-param robot_description -urdf
+            -x 0.0
+            -y 0.0
+            -z 0.0
+            -R 0.0
+            -P 0.0
+            -Y 0.0
+            -model $(arg robot_name)"/>-->
+
+        <!-- Publish robot state -->
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+        <!-- Load the pre-defined map -->
+        <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+        <!-- Provide a 1:1 transform from map to odom -->
+        <node pkg="tf" type="static_transform_publisher" name="ground_truth_tf" args="0 0 0 0 0 0 1 map odom 100"/>
+
+        <!-- Provides a tf frame from the ground truth odometry topic (provided by gazebo) to odom -->
+        <!--<node pkg="message_to_tf" type="message_to_tf" name="ground_truth_to_tf" output="screen">
+            <param name="frame_id" value="odom" />
+            <param name="odometry_topic" value="ground_truth" />
+        </node>-->
+
+        <!-- Start the V-REP interface node -->
+        <node name="atom_interface_vrep" pkg="atom_interface_vrep" type="atom_interface_vrep_node" output="screen"/>
+
+        <!-- Start the joy node to parse the Joy-Con input -->
+        <node name="joy" pkg="joy" type="joy_node" respawn="true">
+            <param name="dev" type="string" value="/dev/input/js0" />
+            <rosparam>
+                autorepeat_rate: 4
+            </rosparam>
+        </node>
+
+        <!-- Mapping for the Nintendo Joy-Con to cmd_vel -->
+        <node name="teleop_twist_joy" pkg="teleop_twist_joy" type="teleop_node" respawn="true">
+            <rosparam>
+                axis_linear: 5
+                axis_angular: 4
+                scale_linear: 1.0
+                scale_linear_turbo: 1.5
+                scale_angular: 1.0
+            </rosparam>
+            <remap from="cmd_vel" to="diff_drive_controller/cmd_vel"/>
+        </node>
+
+        <!-- Navigation module -->
+        <node pkg="move_base" type="move_base" respawn="false" name="move_base">
+            <rosparam file="$(find atom_control)/config/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+            <rosparam file="$(find atom_control)/config/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+            <rosparam file="$(find atom_control)/config/local_costmap_params.yaml" command="load"/>
+            <rosparam file="$(find atom_control)/config/global_costmap_params.yaml" command="load"/>
+            <rosparam file="$(find atom_control)/config/base_local_planner_params.yaml" command="load"/>
+            <remap from="cmd_vel" to="diff_drive_controller/cmd_vel"/>
+            <remap from="move_base_simple/goal" to="/move_base_simple/goal"/>
+        </node>
+    </group>
+
+    <!-- Visualisation -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find atom_ground_control)/config/atom_ground_control.rviz"/>
+</launch>

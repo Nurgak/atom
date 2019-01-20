@@ -1,7 +1,0 @@
-image: maze.png
-resolution: 0.0625
-origin: [-8.0, -8.0, 0.0]
-negate: 0
-occupied_thresh: 0.2
-free_thresh: 0.1
-

@@ -1,0 +1,6 @@
+image: duckietown_costmap.png
+resolution: 0.002666667
+origin: [-8.0, -8.0, 0.0]
+negate: 0
+occupied_thresh: 0.2
+free_thresh: 0.1

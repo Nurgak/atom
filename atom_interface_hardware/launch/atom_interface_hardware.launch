@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<launch>
+    <!-- Platform specific parameters -->
+    <arg name="robot_name" default="atom"/>
+    <arg name="robot_xacro" default="$(find atom_description)/urdf/atom.xacro"/>
+    <arg name="robot_parameters"
+        default="$(find atom_control)/config/atom_controllers.yaml"/>
+
+    <!-- Group under namespace to allow multiple instances -->
+    <group ns="$(arg robot_name)">
+        <!-- Load robot xacro and controller parameters -->
+        <param name="robot_description"
+            command="$(find xacro)/xacro --inorder '$(arg robot_xacro)'" />
+        <rosparam file="$(arg robot_parameters)" command="load"/>
+
+        <!-- Controller for joint states and diff_drive_controller -->
+        <node name="controller_spawner" pkg="controller_manager" type="spawner"
+            respawn="false"
+            args="joint_state_controller diff_drive_controller"/>
+        
+        <!-- State publisher for transforms -->
+        <node name="robot_state_publisher" pkg="robot_state_publisher"
+            type="robot_state_publisher"/>
+
+        <!-- Hardware control, interfaces with the GPIO for PWM signals -->
+        <node name="atom_hardware_interface" pkg="atom_hardware_interface"
+            type="atom_hardware_interface_node"/>
+
+        <!-- Transforms the joy messages to cmd_vel messages -->
+        <node name="teleop_twist_joy" pkg="teleop_twist_joy" type="teleop_node"
+            respawn="true">
+            <!-- Values set for a Nintendo Switch JoyCon controller -->
+            <rosparam>
+                axis_linear: 5
+                scale_linear: 0.01
+                scale_linear_turbo: 0.1
+                axis_angular: 4
+                scale_angular: 0.05
+            </rosparam>
+            <!-- Remapping required for diff_drive_controller -->
+            <remap from="cmd_vel" to="diff_drive_controller/cmd_vel"/>
+        </node>
+
+        <!-- Camera input, subscribes to /dev/video0 -->
+        <node name="cv_camera" pkg="cv_camera" type="cv_camera_node"/>
+    </group>
+</launch>

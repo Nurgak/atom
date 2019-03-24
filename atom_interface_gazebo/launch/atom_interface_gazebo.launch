@@ -1,14 +1,32 @@
 <?xml version="1.0" ?>
-<launch>    
+<launch>
+    <arg name="robot_name" default="atom"/>
+    <arg name="robot_xacro" default="$(find atom_description)/urdf/atom.xacro"/>
+    <arg name="robot_parameters"
+        default="$(find atom_control)/config/atom_controllers.yaml"/>
+
     <!-- Launch the Gazebo simulation environment -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="paused" value="true"/>
     </include>
 
-    <group ns="atom">
-        <!-- Load rover physical representation -->
-        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find atom_description)/urdf/atom.xacro'" />
+    <!-- Group under namespace to allow multiple instances -->
+    <group ns="$(arg robot_name)">
+        <param name="robot_description"
+            command="$(find xacro)/xacro --inorder '$(arg robot_xacro)'" />
+        <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+            respawn="false" args="-param robot_description -urdf -model atom"/>
 
-        <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" args="-param robot_description -urdf -model atom"/>
+        <!-- Controller for joint states and diff_drive_controller -->
+        <node name="controller_spawner" pkg="controller_manager" type="spawner"
+            respawn="false"
+            args="joint_state_controller diff_drive_controller"/>
+        
+        <!-- State publisher for transforms -->
+        <node name="robot_state_publisher" pkg="robot_state_publisher"
+            type="robot_state_publisher"/>
+
+        <!-- Camera input, subscribes to /dev/video0 -->
+        <node name="cv_camera" pkg="cv_camera" type="cv_camera_node"/>
     </group>
 </launch>

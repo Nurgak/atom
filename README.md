@@ -91,6 +91,7 @@ The duckietown scene places ATOM in a [duckietown](https://www.duckietown.org) e
 
 * **atom_interface_hardware.launch:** launch the hardware interface, sends PWM signals to the H-brige connected to the Raspberry Pi to se wheel speeds.
 * **atom_interface_vrep.launch:** launch the simulation interface with R-VIZ visualization and `move_base` node.
+* **atom_interface_gazebo.launch:** launch the simulation interface with R-VIZ visualization and `move_base` node.
 * **atom_ground_control.launch:** launch the R-VIZ visualization with joystick interface, meant to be used on remote computer with the physical platform being the master.
 
 ## Nodes
@@ -120,7 +121,7 @@ The pins of the L298 are to be connected the following way:
 
 	Right wheel names.
 
-* **`diff_drive_controller/publish_rate`** (float, default: 10)
+* **`diff_drive_controller/publish_rate`** (float, default: 10Hz)
 
 	Control loop rate.
 
@@ -136,6 +137,6 @@ Node to interface with the V-REP simulation. The names of the joints in the V-RE
 
 	Right wheel names.
 
-* **`diff_drive_controller/publish_rate`** (float, default: 10)
+* **`diff_drive_controller/publish_rate`** (float, default: 10Hz)
 
   Control loop rate.

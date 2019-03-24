@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<launch>    
+    <!-- Launch the Gazebo simulation environment -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="paused" value="true"/>
+    </include>
+
+    <group ns="atom">
+        <!-- Load rover physical representation -->
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find atom_description)/urdf/atom.xacro'" />
+
+        <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" args="-param robot_description -urdf -model atom"/>
+    </group>
+</launch>
